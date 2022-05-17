@@ -39,6 +39,6 @@ show the status along with necessary information such as "Door status" , "light 
 - [@anhnohaxedo](https://github.com/anhnohaxedo)
 - [@Darksky24](https://github.com/Darksky24)
 - [@normalguy12](https://github.com/normalguy12)
-- ÄoÃ n Viá»‡t TÃº
-- Tráº§n Quá»‘c Duy
+- Doan Viet Tu
+- Tran Quoc Duy
 
