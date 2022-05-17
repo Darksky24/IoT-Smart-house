@@ -1,0 +1,93 @@
+input.onPinPressed(TouchPin.P0, function () {
+    Entry = "" + Entry + ("" + NumCounter)
+})
+input.onButtonPressed(Button.A, function () {
+    NumCounter += -1
+    if (NumCounter < 0) {
+        NumCounter = 9
+    }
+    basic.showNumber(NumCounter)
+})
+input.onButtonPressed(Button.B, function () {
+    NumCounter += 1
+    if (NumCounter > 9) {
+        NumCounter = 0
+    }
+    basic.showNumber(NumCounter)
+})
+input.onPinPressed(TouchPin.P1, function () {
+    if (Entry == Password) {
+        basic.showIcon(IconNames.Yes)
+        pins.servoWritePin(AnalogPin.P16, 90)
+        basic.pause(3000)
+        pins.servoWritePin(AnalogPin.P16, 0)
+    } else {
+        basic.showIcon(IconNames.No)
+        FalseCounter += 1
+    }
+    basic.pause(500)
+    basic.clearScreen()
+    NumCounter = 0
+    basic.showNumber(NumCounter)
+    Entry = ""
+})
+function DoorAlarm () {
+    if (FalseCounter >= 3) {
+        pins.analogWritePin(AnalogPin.P2, 1023)
+        basic.pause(3000)
+        pins.analogWritePin(AnalogPin.P2, 0)
+        FalseCounter = 0
+    }
+    if (pins.digitalReadPin(DigitalPin.P8) == 1) {
+        BellCounter += 1
+        if (BellCounter > 50) {
+            pins.analogWritePin(AnalogPin.P2, 1023)
+        }
+    } else {
+        BellCounter = 0
+        pins.analogWritePin(AnalogPin.P2, 0)
+    }
+}
+let BellCounter = 0
+let FalseCounter = 0
+let Entry = ""
+let Password = ""
+let NumCounter = 0
+basic.showNumber(0)
+NumCounter = 0
+Password = "123"
+Entry = ""
+FalseCounter = 0
+BellCounter = 0
+pins.servoWritePin(AnalogPin.P16, 0)
+pins.analogWritePin(AnalogPin.P2, 0)
+pins.setPull(DigitalPin.P8, PinPullMode.PullUp)
+I2C_LCD1602.on()
+I2C_LCD1602.BacklightOn()
+basic.forever(function () {
+    dht11_dht22.queryData(
+    DHTtype.DHT11,
+    DigitalPin.P5,
+    true,
+    true,
+    true
+    )
+    makerbit.showStringOnLcd1602("Temp:" + ("" + Math.round(dht11_dht22.readData(dataType.temperature)) + "*") + "C", makerbit.position1602(LcdPosition1602.Pos1), 13)
+    makerbit.showStringOnLcd1602("Humid:" + ("" + dht11_dht22.readData(dataType.humidity)) + "%", makerbit.position1602(LcdPosition1602.Pos17), 12)
+    serial.writeString("!1:TEMP:" + dht11_dht22.readData(dataType.temperature) + "#")
+    serial.writeString("!2:HUMID:" + ("" + dht11_dht22.readData(dataType.humidity)) + "#")
+    serial.writeString("!4:LIGHT:" + input.lightLevel() + "#")
+    if (Math.round(dht11_dht22.readData(dataType.temperature)) > 25) {
+        Kitronik_Robotics_Board.motorOn(Kitronik_Robotics_Board.Motors.Motor1, Kitronik_Robotics_Board.MotorDirection.Forward, 14)
+    }
+    if (pins.digitalReadPin(DigitalPin.P8) == 1) {
+        serial.writeString("!3:DOOR:" + ("" + pins.digitalReadPin(DigitalPin.P8)) + "#")
+    } else {
+        serial.writeString("!3:DOOR:" + ("" + pins.digitalReadPin(DigitalPin.P8)) + "#")
+    }
+    basic.pause(2000)
+})
+basic.forever(function () {
+    DoorAlarm()
+    basic.pause(100)
+})
