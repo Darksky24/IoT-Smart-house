@@ -1,0 +1,68 @@
+function Curtain (open: boolean) {
+    makerbit.showStringOnLcd1602("" + (status), makerbit.position1602(LcdPosition1602.Pos17), 16)
+    if (open == true && status == true) {
+        pins.servoWritePin(AnalogPin.P1, 180)
+        basic.pause(1000)
+        pins.servoWritePin(AnalogPin.P0, 90)
+    }
+    if (open == false && status == false) {
+        pins.servoWritePin(AnalogPin.P1, 0)
+        basic.pause(1000)
+        pins.servoWritePin(AnalogPin.P0, 90)
+    }
+}
+function light2 () {
+    serial.writeLine("" + (input.lightLevel()))
+    makerbit.showStringOnLcd1602("" + (input.lightLevel()), makerbit.position1602(LcdPosition1602.Pos1), 16)
+    if (input.lightLevel() >= light_density_default) {
+        Curtain(false)
+        status = true
+    }
+    if (input.lightLevel() < light_density_default) {
+        Curtain(true)
+        status = false
+    }
+}
+let light_density_default = 0
+let status = false
+status = true
+let reset0 = false
+let reset1 = false
+let n0 = 0
+let n1 = 0
+let default_open_hour = 6
+let default_open_minute = 0
+let default_close_hour = 21
+let default_close_minute = 0
+let open_hour = [default_open_hour]
+let open_minute = [default_open_minute]
+let close_hour = [default_close_hour]
+let close_minute = [default_close_minute]
+light_density_default = 40
+pins.servoSetPulse(AnalogPin.P1, 1500)
+pins.servoWritePin(AnalogPin.P0, 180)
+basic.forever(function () {
+    light2()
+    if (reset1 == true) {
+        n1 = 0
+        reset1 = false
+    }
+    if (RTC_DS1307.getTime(RTC_DS1307.TimeType.HOUR) == open_hour[n1] && RTC_DS1307.getTime(RTC_DS1307.TimeType.MINUTE) == open_minute[n1]) {
+        Curtain(true)
+        n1 += 1
+        if (n1 == open_hour.length - 1) {
+            reset1 = true
+        }
+    }
+    if (reset0 == true) {
+        n0 = 0
+        reset0 = false
+    }
+    if (RTC_DS1307.getTime(RTC_DS1307.TimeType.HOUR) == close_hour[n0] && RTC_DS1307.getTime(RTC_DS1307.TimeType.MINUTE) == close_minute[n0]) {
+        n0 += 1
+        Curtain(false)
+        if (n0 == close_hour.length - 1) {
+            reset0 = true
+        }
+    }
+})
